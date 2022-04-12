@@ -1,27 +1,29 @@
 #!/usr/bin/env bash
 set -ex -o pipefail
 
-# Set up NVIDIA docker repo
-curl -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-echo "deb https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64 /" | sudo tee -a /etc/apt/sources.list.d/nvidia-docker.list
-echo "deb https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64 /" | sudo tee -a /etc/apt/sources.list.d/nvidia-docker.list
-echo "deb https://nvidia.github.io/nvidia-docker/ubuntu16.04/amd64 /" | sudo tee -a /etc/apt/sources.list.d/nvidia-docker.list
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+# Install Docker-CE
+curl https://get.docker.com | sh \
+  && sudo systemctl --now enable docker
+
+# Setup NVIDIA package repository and the GPG key
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+      && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+      && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+            sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+            sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 
 # Remove unnecessary sources
 sudo rm -f /etc/apt/sources.list.d/google-chrome.list
 sudo rm -f /etc/apt/heroku.list
-sudo rm -f /etc/apt/openjdk-r-ubuntu-ppa-xenial.list
 sudo rm -f /etc/apt/partner.list
 
 sudo apt-get -y update
-sudo apt-get -y remove linux-image-generic linux-headers-generic linux-generic docker-ce
+sudo apt-get install -y nvidia-docker2
+sudo systemctl restart docker
+sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+
 sudo apt-get -y install \
-  linux-headers-$(uname -r) \
-  linux-image-generic \
-  moreutils \
-  docker-ce=5:18.09.4~3-0~ubuntu-xenial \
-  nvidia-container-runtime=2.0.0+docker18.09.4-1 \
-  nvidia-docker2=2.0.3+docker18.09.4-1 \
   expect-dev
 
 # install git lfs and checkout the blob files
