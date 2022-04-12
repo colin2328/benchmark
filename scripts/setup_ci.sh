@@ -21,7 +21,7 @@ sudo rm -f /etc/apt/partner.list
 sudo apt-get -y update
 sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
-sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+sudo docker run --rm --gpus all nvidia/cuda:11.3-base nvidia-smi
 
 sudo apt-get -y install \
   expect-dev
