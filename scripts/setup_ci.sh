@@ -4,7 +4,7 @@ set -ex -o pipefail
 nvidia-smi
 
 sudo apt-get -y install \
-  expect-dev
+  expect
 
 # install git lfs and checkout the blob files
 curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
