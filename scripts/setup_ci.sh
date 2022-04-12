@@ -6,12 +6,14 @@ set -ex -o pipefail
 curl https://get.docker.com | sh \
   && sudo systemctl --now enable docker
 
+# https://nvidia.github.io/libnvidia-container/
 # Setup NVIDIA package repository and the GPG key
-distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
-      && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
-      && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
-            sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-            sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+DIST=$(. /etc/os-release; echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | \
+  sudo apt-key add -
+curl -s -L https://nvidia.github.io/libnvidia-container/$DIST/libnvidia-container.list | \
+  sudo tee /etc/apt/sources.list.d/libnvidia-container.list
+sudo apt-get update
 
 # Remove unnecessary sources
 sudo rm -f /etc/apt/sources.list.d/google-chrome.list
@@ -21,7 +23,7 @@ sudo rm -f /etc/apt/partner.list
 sudo apt-get -y update
 sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
-sudo docker run --rm --gpus all nvidia/cuda:11.3-base nvidia-smi
+sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 
 sudo apt-get -y install \
   expect-dev
